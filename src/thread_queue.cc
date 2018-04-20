@@ -141,6 +141,9 @@ int Threading::processorCount()
 
 std::shared_ptr<ThreadQueue> Threading::getDefaultQueue()
 {
+    if(defaultQueue == nullptr) {
+        defaultQueue = getQueue("default", Concurrent);
+    }
     return defaultQueue;
 }
 

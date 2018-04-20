@@ -1,29 +1,26 @@
-#include <thread/promise.h>
+#include <thread/thread.h>
 #include <iostream>
-
 
 int main(int argc, char **argv)
 {
+  auto queue = Easy::Threading::getQueue(Easy::Threading::Serial); //获取串行队列
+  //  auto queue = Easy::Threading::getQueue(Easy::Threading::Concurrent); //获取队列
+  //  auto queue = Easy::Threading::getQueue(Easy::Threading::Serial); //获取串行队列
 
-    Easy::Promise<int>([]{
-        std::cout << 1 << std::endl;
-        return 1;
-    }).then<std::string>([](const Easy::ResultBlock<int>& closure) {
-        std::cout << 2 << std::endl;
-       return std::to_string(closure());
-    }).then<std::string>([](const Easy::ResultBlock<std::string>& closure) {
-        auto s = closure();
-        std::cout << 3 << std::endl;
-        return s + "123456";
-    }).then<int>([](const Easy::ResultBlock<std::string>& closure) {
+  queue->dispatch([]{
+    std::cout << "第1个任务" << std::endl;
+  });
+  queue->dispatch([]{
+    std::cout << "第2个任务" << std::endl;
+  });
+  queue->dispatch([]{
+    std::cout << "第3个任务" << std::endl;
+  });
+  queue->dispatch([]{
+    std::cout << "第4个任务" << std::endl;
+  });
 
-        auto s = closure();
-        std::cout << 4 << std::endl;
-        return 0;
-    }).when([](const std::exception& e) {
-        std::cout << e.what() << std::endl;
-    }).wait();
+  Easy::Threading::sleep(1);
 
-
-    return 0;
+  return 0;
 }
