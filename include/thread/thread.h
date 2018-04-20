@@ -50,7 +50,7 @@ public:
 
 class Threading
 {
-public:\
+public:
     static constexpr double noTimeout = 0.0;
     static const char *anonymousQueueName;
     Threading();

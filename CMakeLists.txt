@@ -11,6 +11,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 set(THREAD_SRC
         src/thread.cc
         src/thread_queue.cc
+        src/promise.cc
     )
 
 add_library(thread STATIC ${THREAD_SRC})

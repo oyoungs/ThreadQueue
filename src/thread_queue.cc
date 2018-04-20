@@ -190,6 +190,7 @@ std::shared_ptr<ThreadQueue> Threading::getQueue(const std::string &name, QueueT
 
 void Threading::destroyQueue(std::shared_ptr<ThreadQueue> queue)
 {
+    if(queue == nullptr) return;
     if(queue->name() != anonymousQueueName) {
         queuesLock.lock();
         defer ( []{ queuesLock.unlock();});
@@ -204,7 +205,7 @@ void Threading::destroyQueue(std::shared_ptr<ThreadQueue> queue)
         }
     }
 
-    auto qi = reinterpret_cast<ThreadQueueInternal *>(queue.get());
+    auto qi = dynamic_cast<ThreadQueueInternal *>(queue.get());
     if(qi) {
         qi->setRunning(false);
         qi->broadcast();

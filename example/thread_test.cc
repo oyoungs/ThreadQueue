@@ -1,34 +1,28 @@
-#include <thread/thread.h>
+#include <thread/promise.h>
 #include <iostream>
 
 
 int main(int argc, char **argv)
 {
 
-    auto q = Easy::Threading::getQueue("queue", Easy::Threading::Concurrent);
+    Easy::Promise<int>([]{
+        std::cout << 1 << std::endl;
+        return 1;
+    }).then<std::string>([](const Easy::ResultBlock<int>& closure) {
+        std::cout << 2 << std::endl;
+       return std::to_string(closure());
+    }).then<std::string>([](const Easy::ResultBlock<std::string>& closure) {
+        auto s = closure();
+        std::cout << 3 << std::endl;
+        return s + "123456";
+    }).then<int>([](const Easy::ResultBlock<std::string>& closure) {
 
-    q->dispatch([]{
-        Easy::Threading::sleep(1.0);
-        std::cout << "dispatch1" << std::endl;
-    });
-    q->dispatch([]{
-        Easy::Threading::sleep(1.0);
-        std::cout << "dispatch2" << std::endl;
-    });
-    q->dispatch([]{
-        Easy::Threading::sleep(1.0);
-        std::cout << "dispatch3" << std::endl;
-    });
-    q->dispatch([]{
-        Easy::Threading::sleep(1.0);
-        std::cout << "dispatch4" << std::endl;
-    });
-    q->dispatch([]{
-        Easy::Threading::sleep(1.0);
-        std::cout << "dispatch5" << std::endl;
-    });
-    std::cout << "CPU: " << Easy::Threading::processorCount() << std::endl;
-    Easy::Threading::sleep(10.0);
+        auto s = closure();
+        std::cout << 4 << std::endl;
+        return 0;
+    }).when([](const std::exception& e) {
+        std::cout << e.what() << std::endl;
+    }).wait();
 
 
     return 0;
