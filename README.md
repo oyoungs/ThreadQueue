@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 
 ## 使用Promise示例代码
 
-```
+```cpp
 #include <thread/promise.h>
 #include <iostream>
 
