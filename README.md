@@ -48,16 +48,16 @@ int main(int argc, char **argv)
     Easy::Promise<int>([]{
         std::cout << 1 << std::endl;
         return 1;
-    }).then<std::string>([](int closure) {
+    }).then<std::string>([](int last) {
         std::cout << 2 << std::endl;
-       return std::to_string(closure());
-    }).then<std::string>([](const std::string& closure) {
-        auto s = closure();
+       return std::to_string(last);
+    }).then<std::string>([](const std::string& last) {
+        auto s = last;
         std::cout << 3 << std::endl;
         return s + "123456";
-    }).then<int>([](const std::string& closure) {
+    }).then<int>([](const std::string& last) {
 
-        auto s = closure();
+        auto s = last;
         std::cout << 4 << std::endl;
         return 0;
     }).when([](const std::exception& e) {
