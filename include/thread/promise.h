@@ -2,6 +2,7 @@
 #define EASY_THREAD_PROMISE_H
 
 #include <thread/thread.h>
+#include <iostream>
 
 namespace Easy {
 
@@ -42,8 +43,6 @@ namespace Easy {
     {
 
     public:
-        template<typename T>
-        using PromiseClosure = std::function<void(Promise<T>)>;
 
 
         Promise(const PromiseClosure<ReturnType>& closure) {
@@ -69,21 +68,15 @@ namespace Easy {
         }
 
         template<typename LastType>
-        Promise(Promise<LastType>& from, const ResultWithArgBlock<ReturnType, ResultBlock<LastType>>& closure) {
+        Promise(Promise<LastType>& from, const ResultWithArgBlock<ReturnType, LastType>& closure) {
             queue = from.queue;
             queue->dispatch([=, &from]{
                 try {
-                    ResultBlock<LastType> block = [=, &from]{
-                        try {
-                            auto v = from.wait();
-                            return v;
-                        } catch(...) {
-                            throw BrokenPromise();
-                        }
-                    };
-                    auto value = closure(block);
+                    auto last = from.wait();
+                    auto value = closure(last);
                     set(value);
                 } catch(std::exception& e) {
+                    std::cerr << e.what() << std::endl;
                     fail(e);
                 }
             });
@@ -93,8 +86,8 @@ namespace Easy {
             event.lock();
             defer ([=] { event.unlock();});
 
-            if(error) {
-                throw *error;
+            if(!error.empty()) {
+                throw std::runtime_error(error.c_str());
             }
             if(value) {
                 return *value;
@@ -110,39 +103,32 @@ namespace Easy {
             event.broadcast();
         }
 
-        void fail(const std::exception& exception) {
+        void fail(const std::exception& e) {
             event.lock();
             defer ([=] {event.unlock();});
-            error = std::make_shared<std::exception>(exception);
+            error = e.what();
             event.broadcast();
         }
 
         template<typename NextType>
-        Promise<NextType> then(const ResultWithArgBlock<NextType, ResultBlock<ReturnType>>& closure) {
+        Promise<NextType> then(const ResultWithArgBlock<NextType, ReturnType>& closure) {
             return Promise<NextType>(*this, closure);
         }
 
-        Promise when(const std::function<void(const std::exception&)>& closure) {
-            ResultWithArgBlock<ReturnType, ResultBlock<ReturnType>> block = [=](const ResultBlock<ReturnType>& value) -> ReturnType {
-                try {
-                    return value();
-                } catch(std::exception& e) {
-                    try {
-                        closure(e);
-                    } catch(...) {}
-                    throw e;
-                }
-            };
-
-            return Promise(*this, block);
+        void when(const std::function<void(const std::exception&)>& closure) {
+            try {
+              wait();
+            } catch(std::exception& e) {
+              closure(e);
+            }
         }
 
         ReturnType wait(double seconds = Threading::noTimeout) {
             event.lock();
             defer ([=] { event.unlock();});
 
-            if(error) {
-                throw *error;
+            if(!error.empty()) {
+                throw std::runtime_error(error.c_str());
             }
 
             if(value) {
@@ -150,8 +136,8 @@ namespace Easy {
             }
 
             do {
-                if(error) {
-                    throw *error;
+                if(!error.empty()) {
+                    throw std::runtime_error(error.c_str());
                 }
 
                 if(value) {
@@ -159,8 +145,8 @@ namespace Easy {
                 }
             } while(event.wait(seconds));
 
-            if(error) {
-                throw *error;
+            if(!error.empty()) {
+                throw std::runtime_error(error.c_str());
             }
 
             if(value) {
@@ -174,7 +160,7 @@ namespace Easy {
     private:
         Threading::Event event;
         std::shared_ptr<ReturnType> value;
-        std::shared_ptr<std::exception> error;
+        std::string                 error;
     };
 
 

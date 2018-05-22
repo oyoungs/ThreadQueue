@@ -14,10 +14,10 @@ set(THREAD_SRC
         src/promise.cc
     )
 
-add_library(thread STATIC ${THREAD_SRC})
-target_link_libraries(thread pthread rt)
+add_library(dispatch STATIC ${THREAD_SRC})
+target_link_libraries(dispatch pthread rt)
 
 
 
 add_executable(thread_test example/thread_test.cc)
-target_link_libraries(thread_test thread)
+target_link_libraries(thread_test dispatch )
